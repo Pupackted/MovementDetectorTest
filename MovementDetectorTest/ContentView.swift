@@ -69,12 +69,25 @@ struct ActivityEntry: Identifiable, Codable {
 
 final class MovementHistoryViewModel: ObservableObject {
     @Published private(set) var currentState: ActivityState = .unknown
-    @Published private(set) var history: [ActivityEntry] = [] // newest first
+    @Published private(set) var history: [ActivityEntry] = [] {
+        // *** NEW: This will run every time the history array is changed. ***
+        didSet {
+            saveHistory()
+        }
+    }
     @Published var availabilityMessage: String?
 
     private let manager = CMMotionActivityManager()
     private var lastLoggedState: ActivityState?
+    
+    // *** NEW: A key to identify our saved data in UserDefaults. ***
+    private let historySaveKey = "MovementHistory"
 
+    // *** NEW: The initializer now loads the history when the app starts. ***
+    init() {
+        loadHistory()
+    }
+    
     func start() {
         guard CMMotionActivityManager.isActivityAvailable() else {
             availabilityMessage = "Motion activity is not available on this device."
@@ -105,6 +118,31 @@ final class MovementHistoryViewModel: ObservableObject {
 
     func clearHistory() {
         history.removeAll()
+        // No need to call saveHistory() here, because the `didSet` observer above will do it for us.
+    }
+    
+    // *** NEW: Function to save the history array to UserDefaults. ***
+    private func saveHistory() {
+        // We use JSONEncoder to convert our array of ActivityEntry objects into Data that can be stored.
+        if let encodedData = try? JSONEncoder().encode(history) {
+            UserDefaults.standard.set(encodedData, forKey: historySaveKey)
+            print("History saved! (\(history.count) entries)")
+        }
+    }
+    
+    // *** NEW: Function to load the history from UserDefaults. ***
+    private func loadHistory() {
+        // We check if there's any data saved under our key.
+        if let savedData = UserDefaults.standard.data(forKey: historySaveKey) {
+            // We use JSONDecoder to convert the saved Data back into an array of ActivityEntry objects.
+            if let decodedHistory = try? JSONDecoder().decode([ActivityEntry].self, from: savedData) {
+                self.history = decodedHistory
+                print("History loaded! (\(history.count) entries)")
+                return
+            }
+        }
+        // If nothing is loaded, we start with an empty array.
+        self.history = []
     }
 
     private static func map(_ activity: CMMotionActivity) -> ActivityState {
@@ -241,4 +279,3 @@ struct ContentView: View {
 #Preview {
     ContentView()
 }
-
