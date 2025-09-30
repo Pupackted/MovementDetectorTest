@@ -29,9 +29,22 @@
 		7CA188812E8B6CDF005E6ABF /* MovementDetectorTestUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MovementDetectorTestUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		7CA188952E8B6DCA005E6ABF /* Exceptions for "MovementDetectorTest" folder in "MovementDetectorTest" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 7CA188692E8B6CDE005E6ABF /* MovementDetectorTest */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		7CA1886C2E8B6CDE005E6ABF /* MovementDetectorTest */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				7CA188952E8B6DCA005E6ABF /* Exceptions for "MovementDetectorTest" folder in "MovementDetectorTest" target */,
+			);
 			path = MovementDetectorTest;
 			sourceTree = "<group>";
 		};
@@ -400,6 +413,8 @@
 				DEVELOPMENT_TEAM = 25C6TYUK25;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = MovementDetectorTest/Info.plist;
+				INFOPLIST_KEY_NSMotionUsageDescription = "This app needs to access your motion data to detect when you are walking or running.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -432,6 +447,8 @@
 				DEVELOPMENT_TEAM = 25C6TYUK25;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = MovementDetectorTest/Info.plist;
+				INFOPLIST_KEY_NSMotionUsageDescription = "This app needs to access your motion data to detect when you are walking or running.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
