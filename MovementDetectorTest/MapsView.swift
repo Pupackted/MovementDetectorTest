@@ -8,58 +8,90 @@
 import SwiftUI
 import MapKit
 import CoreLocation
+import Combine
 
 struct MapsView: View {
     // MARK: - Properties
 
-    // The array of coordinates you provided.
-    @State private var coordinates: [CLLocationCoordinate2D] = [
-        CLLocationCoordinate2D(latitude: -8.73712374551025, longitude: 115.17616498211015),
-        CLLocationCoordinate2D(latitude: -8.73730299247452, longitude: 115.1760392830837),
-        CLLocationCoordinate2D(latitude: -8.737365146098892, longitude: 115.17599440302712),
-        CLLocationCoordinate2D(latitude: -8.737217496173534, longitude: 115.17609837346926),
-        CLLocationCoordinate2D(latitude: -8.737172622193627, longitude: 115.17613002103975),
-        CLLocationCoordinate2D(latitude: -8.73721943508369, longitude: 115.1760889928665),
-        CLLocationCoordinate2D(latitude: -8.737410997780424, longitude: 115.17597024723813),
-        CLLocationCoordinate2D(latitude: -8.737361080952155, longitude: 115.17595456059782),
-        CLLocationCoordinate2D(latitude: -8.73731040300484, longitude: 115.17596969984207),
-        CLLocationCoordinate2D(latitude: -8.737359223306193, longitude: 115.17596746988964),
-        CLLocationCoordinate2D(latitude: -8.737377013943275, longitude: 115.17591895841964),
-        CLLocationCoordinate2D(latitude: -8.737326386068371, longitude: 115.17594087832107),
-        CLLocationCoordinate2D(latitude: -8.737279743450731, longitude: 115.17590979197757),
-        CLLocationCoordinate2D(latitude: -8.737333308992843, longitude: 115.1759415281409),
-        CLLocationCoordinate2D(latitude: -8.737360655115321, longitude: 115.175949611749),
-        CLLocationCoordinate2D(latitude: -8.737320923314376, longitude: 115.17596854799254),
-        CLLocationCoordinate2D(latitude: -8.737271981400431, longitude: 115.17598608317462),
-        CLLocationCoordinate2D(latitude: -8.737248056272367, longitude: 115.17602506557975),
-        CLLocationCoordinate2D(latitude: -8.737191911232516, longitude: 115.17607334123217),
-        CLLocationCoordinate2D(latitude: -8.737178350589328, longitude: 115.17617308204004),
-        CLLocationCoordinate2D(latitude: -8.737159198695833, longitude: 115.17621875313297)
-    ]
+    // Create an observed object for the LocationManager.
+    @StateObject private var locationManager = LocationManager()
 
     // MARK: - Body
 
     var body: some View {
-        Map {
-            // This will draw a line connecting all the coordinates.
-            MapPolyline(coordinates: coordinates)
-                .stroke(.blue, lineWidth: 5)
+        ZStack {
+            Map {
+                // This will draw a line connecting all the tracked coordinates.
+                MapPolyline(coordinates: locationManager.trackedLocations)
+                    .stroke(.blue, lineWidth: 5)
 
-            // This will place a marker at each coordinate.
-            ForEach(coordinates.indices, id: \.self) { index in
-                Marker("Point \(index + 1)", coordinate: coordinates[index])
+                // This will place a marker at each coordinate.
+                ForEach(locationManager.trackedLocations.indices, id: \.self) { index in
+                    let coordinate = locationManager.trackedLocations[index]
+                    Marker("Point \(index + 1)", coordinate: coordinate)
+                }
+            }
+            .mapStyle(.standard)
+            .ignoresSafeArea(edges: .bottom)
+
+            VStack {
+                Spacer()
+                Button(action: {
+                    locationManager.toggleTracking()
+                }) {
+                    Text(locationManager.isTracking ? "Stop Tracking" : "Start Tracking")
+                        .font(.headline)
+                        .padding()
+                        .background(locationManager.isTracking ? Color.red : Color.green)
+                        .foregroundColor(.white)
+                        .cornerRadius(10)
+                }
+                .padding()
             }
         }
-        .mapStyle(.standard)
-        .onAppear(perform: setupMap)
-    }
-
-    // MARK: - Private Methods
-
-    private func setupMap() {
-        // Here you can add any additional map setup if needed.
     }
 }
+
+
+class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
+    let manager = CLLocationManager()
+
+    @Published var isTracking = false
+    @Published var trackedLocations: [CLLocationCoordinate2D] = []
+
+    override init() {
+        super.init()
+        manager.delegate = self
+        manager.requestWhenInUseAuthorization()
+        manager.desiredAccuracy = kCLLocationAccuracyBestForNavigation
+        manager.distanceFilter = 10
+    }
+
+    func toggleTracking() {
+        if self.isTracking {
+            manager.stopUpdatingLocation()
+            print("🛑 Tracking stopped. Collected \(trackedLocations.count) points.")
+        } else {
+            trackedLocations = []
+            manager.startUpdatingLocation()
+            print("▶️ Tracking started.")
+        }
+        isTracking.toggle()
+    }
+
+    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        guard let latestLocation = locations.last else { return }
+
+        // Append to the trackedLocations array within this class
+        trackedLocations.append(latestLocation.coordinate)
+        print("📍 New location added: \(latestLocation.coordinate)")
+    }
+
+    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+        print("❗️ Error getting location: \(error.localizedDescription)")
+    }
+}
+
 
 // MARK: - Preview
 
