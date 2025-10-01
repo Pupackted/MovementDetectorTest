@@ -414,6 +414,8 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = MovementDetectorTest/Info.plist;
+				INFOPLIST_KEY_NSLocationAlwaysUsageDescription = "'ij'j'pji'pjm";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = mokoko;
 				INFOPLIST_KEY_NSMotionUsageDescription = "This app needs to access your motion data to detect when you are walking or running.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -448,6 +450,8 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = MovementDetectorTest/Info.plist;
+				INFOPLIST_KEY_NSLocationAlwaysUsageDescription = "'ij'j'pji'pjm";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = mokoko;
 				INFOPLIST_KEY_NSMotionUsageDescription = "This app needs to access your motion data to detect when you are walking or running.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
