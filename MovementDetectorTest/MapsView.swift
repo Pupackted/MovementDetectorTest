@@ -63,8 +63,8 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         super.init()
         manager.delegate = self
         manager.requestWhenInUseAuthorization()
-        manager.desiredAccuracy = kCLLocationAccuracyBestForNavigation
-        manager.distanceFilter = 10
+        manager.desiredAccuracy = kCLLocationAccuracyBest
+        manager.distanceFilter = 30
     }
 
     func toggleTracking() {

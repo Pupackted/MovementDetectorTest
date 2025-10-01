@@ -7,51 +7,105 @@
 import CoreLocation
 import Combine
 
+// NEW: A Codable struct to hold identifiable location entries.
+struct LocationEntry: Identifiable, Codable {
+    let id: UUID
+    let date: Date
+    let latitude: Double
+    let longitude: Double
+
+    var coordinate: CLLocationCoordinate2D {
+        CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
+    }
+
+    init(id: UUID = UUID(), location: CLLocation) {
+        self.id = id
+        self.date = location.timestamp
+        self.latitude = location.coordinate.latitude
+        self.longitude = location.coordinate.longitude
+    }
+}
+
+
 class SignificantLocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     private let locationManager = CLLocationManager()
-    @Published private(set) var recentLocations: [CLLocation] = []
-    @Published var statusMessage: String = "Initializing..."
+    
+    // UPDATED: This now holds the persistent history of locations.
+    @Published private(set) var locationHistory: [LocationEntry] = [] {
+        didSet {
+            saveHistory()
+        }
+    }
+    
+    @Published var authorizationStatusMessage: String = "Initializing..."
+    
+    private let historySaveKey = "LocationHistory"
 
     override init() {
         super.init()
-        statusMessage = "Requesting authorization..."
+        loadHistory() // Load history on initialization
+        authorizationStatusMessage = "Requesting authorization..."
+        locationManager.delegate = self // Set delegate
         locationManager.requestAlwaysAuthorization()
-        startMonitoring()
     }
 
     func startMonitoring() {
         if CLLocationManager.significantLocationChangeMonitoringAvailable() {
             locationManager.startMonitoringSignificantLocationChanges()
-            statusMessage = "Monitoring started"
             print("SLC: Monitoring started.")
         } else {
             print("Significant location monitoring is not available on this device.")
-            statusMessage = "Significant location monitoring not available"
+            authorizationStatusMessage = "Significant location monitoring not available"
         }
+    }
+
+    // NEW: Function to clear the location history.
+    func clearHistory() {
+        locationHistory.removeAll()
+    }
+    
+    // NEW: Function to save the history array to UserDefaults.
+    private func saveHistory() {
+        if let encodedData = try? JSONEncoder().encode(locationHistory) {
+            UserDefaults.standard.set(encodedData, forKey: historySaveKey)
+            print("Location history saved! (\(locationHistory.count) entries)")
+        }
+    }
+    
+    // NEW: Function to load the history from UserDefaults.
+    private func loadHistory() {
+        if let savedData = UserDefaults.standard.data(forKey: historySaveKey) {
+            if let decodedHistory = try? JSONDecoder().decode([LocationEntry].self, from: savedData) {
+                self.locationHistory = decodedHistory
+                print("Location history loaded! (\(locationHistory.count) entries)")
+                return
+            }
+        }
+        self.locationHistory = []
     }
 
     func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
         let status = manager.authorizationStatus
         switch status {
         case .authorizedAlways:
-            statusMessage = "Authorized Always. Monitoring significant changes."
+            authorizationStatusMessage = "Authorized Always. Monitoring significant changes."
             print("SLC: Authorized Always.")
             startMonitoring()
         case .authorizedWhenInUse:
-            statusMessage = "Authorized When In Use. Monitoring while app is active."
+            authorizationStatusMessage = "Authorized When In Use. Monitoring while app is active."
             print("SLC: Authorized When In Use.")
             startMonitoring()
         case .denied:
-            statusMessage = "Authorization denied. Enable in Settings."
+            authorizationStatusMessage = "Authorization denied. Enable in Settings."
             print("SLC: Authorization denied.")
         case .restricted:
-            statusMessage = "Authorization restricted."
+            authorizationStatusMessage = "Authorization restricted."
             print("SLC: Authorization restricted.")
         case .notDetermined:
-            statusMessage = "Awaiting authorization..."
+            authorizationStatusMessage = "Awaiting authorization..."
             print("SLC: Authorization not determined.")
         @unknown default:
-            statusMessage = "Unknown authorization status."
+            authorizationStatusMessage = "Unknown authorization status."
             print("SLC: Unknown authorization status.")
         }
     }
@@ -59,20 +113,14 @@ class SignificantLocationManager: NSObject, ObservableObject, CLLocationManagerD
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let location = locations.last else { return }
         DispatchQueue.main.async {
-            self.recentLocations.insert(location, at: 0)
-            if self.recentLocations.count > 20 {
-                self.recentLocations.removeLast(self.recentLocations.count - 20)
-            }
-            let df = DateFormatter()
-            df.dateStyle = .none
-            df.timeStyle = .medium
-            self.statusMessage = "Last update: \(df.string(from: Date()))"
+            // UPDATED: Insert new location entry into the history.
+            self.locationHistory.insert(LocationEntry(location: location), at: 0)
             print("Significant location change detected: \(location.coordinate)")
         }
     }
 
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
-        statusMessage = "Location error: \(error.localizedDescription)"
+        authorizationStatusMessage = "Location error: \(error.localizedDescription)"
         print("Location manager error: \(error.localizedDescription)")
     }
 }
