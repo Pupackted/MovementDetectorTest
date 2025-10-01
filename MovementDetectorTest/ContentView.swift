@@ -171,6 +171,12 @@ struct ContentView: View {
                 .tabItem {
                     Label("Locations", systemImage: "location.circle.fill")
                 }
+            
+            MapsView()
+                .tabItem {
+                    Label("Map", systemImage: "map.fill")
+                }
+
         }
         .onAppear {
             vm.start()
