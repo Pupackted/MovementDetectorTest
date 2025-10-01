@@ -160,6 +160,30 @@ struct ContentView: View {
     @StateObject private var vm = MovementHistoryViewModel()
     @StateObject private var slm = SignificantLocationManager()
 
+    var body: some View {
+        TabView {
+            MovementView(vm: vm)
+                .tabItem {
+                    Label("Activity", systemImage: "figure.walk.circle.fill")
+                }
+
+            SignificantLocationView(slm: slm)
+                .tabItem {
+                    Label("Locations", systemImage: "location.circle.fill")
+                }
+        }
+        .onAppear {
+            vm.start()
+            slm.startMonitoring()
+        }
+        .onDisappear { vm.stop() }
+    }
+}
+
+
+struct MovementView: View {
+    @ObservedObject var vm: MovementHistoryViewModel
+
     private let timeFormatter: DateFormatter = {
         let df = DateFormatter()
         df.dateStyle = .none
@@ -183,16 +207,9 @@ struct ContentView: View {
                 currentStatusCard
 
                 historySection
-                
-                significantLocationSection
             }
             .padding()
         }
-        .onAppear {
-            vm.start()
-            slm.startMonitoring()
-        }
-        .onDisappear { vm.stop() }
     }
 
     private var currentStatusCard: some View {
@@ -278,54 +295,6 @@ struct ContentView: View {
                     .padding(.vertical, 4)
                 }
                 .frame(maxHeight: 280)
-            }
-        }
-    }
-    
-    private var significantLocationSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Text("Significant Locations")
-                    .font(.headline)
-                    .foregroundStyle(.white.opacity(0.9))
-                Spacer()
-                if !slm.recentLocations.isEmpty {
-                    Text("Monitoring")
-                        .font(.caption2.weight(.semibold))
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(Color.blue.opacity(0.2))
-                        .foregroundStyle(.blue)
-                        .clipShape(Capsule())
-                }
-            }
-
-            if slm.recentLocations.isEmpty {
-                Text("No significant location changes yet.")
-                    .foregroundStyle(.white.opacity(0.7))
-                    .padding(.vertical, 12)
-            } else {
-                VStack(spacing: 10) {
-                    ForEach(Array(slm.recentLocations.enumerated()), id: \.offset) { index, item in
-                        HStack(spacing: 12) {
-                            Image(systemName: "location.circle.fill")
-                                .foregroundStyle(.cyan)
-                                .frame(width: 28, height: 28)
-
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text("\(String(format: "%.5f", item.coordinate.latitude)), \(String(format: "%.5f", item.coordinate.longitude))")
-                                    .font(.subheadline.weight(.semibold))
-                                    .foregroundStyle(.primary)
-                                Text(timeFormatter.string(from: item.timestamp))
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                            }
-                            Spacer()
-                        }
-                        .padding(12)
-                        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-                    }
-                }
             }
         }
     }
