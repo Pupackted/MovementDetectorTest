@@ -16,11 +16,11 @@ import Combine
 struct CodableCoordinate: Codable, Hashable {
     let latitude: Double
     let longitude: Double
-
+    
     var coordinate: CLLocationCoordinate2D {
         CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
     }
-
+    
     init(coordinate: CLLocationCoordinate2D) {
         self.latitude = coordinate.latitude
         self.longitude = coordinate.longitude
@@ -34,7 +34,7 @@ struct Trip: Identifiable, Codable, Hashable {
     let locations: [CodableCoordinate]
     var startLocationName: String?
     var endLocationName: String?
-
+    
     init(id: UUID = UUID(), date: Date = Date(), locations: [CLLocationCoordinate2D]) {
         self.id = id
         self.date = date
@@ -48,12 +48,12 @@ struct Trip: Identifiable, Codable, Hashable {
 class GeocoderService {
     private let geocoder = CLGeocoder()
     private var cache: [CodableCoordinate: String] = [:]
-
+    
     func placemark(for coordinate: CodableCoordinate) async -> String {
         if let cached = cache[coordinate] {
             return cached
         }
-
+        
         let location = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
         
         do {
@@ -75,22 +75,47 @@ struct MapsView: View {
     @StateObject private var locationManager = LocationManager()
     @State private var showHistory = false
     @State private var cameraPosition: MapCameraPosition = .automatic
-
+    
     var body: some View {
         ZStack {
             // The Main Interactive Map
             Map(position: $cameraPosition) {
+                
                 if !locationManager.trackedLocations.isEmpty {
+                    // The route line remains the same
                     MapPolyline(coordinates: locationManager.trackedLocations)
                         .stroke(.blue, lineWidth: 5)
                     
-                    // Marker for the start of the route
-                    if let firstCoordinate = locationManager.trackedLocations.first {
-                        Marker("Start", coordinate: firstCoordinate)
-                    }
-                    // Marker for the end, only if there's more than one point
-                    if let lastCoordinate = locationManager.trackedLocations.last, locationManager.trackedLocations.count > 1 {
-                        Marker("End", coordinate: lastCoordinate)
+                    // Iterate through all tracked locations to place a point for each one
+                    ForEach(Array(locationManager.trackedLocations.enumerated()), id: \.offset) { index, coordinate in
+                        
+                        // Use a special marker for the START point
+                        if index == 0 {
+                            Marker("Start", systemImage: "flag.fill", coordinate: coordinate)
+                                .tint(.green)
+                            
+                            // Use a special marker for the END point (only if it's not also the start point)
+                        } else if index == locationManager.trackedLocations.count - 1 {
+                            Marker("End", systemImage: "flag.checkered", coordinate: coordinate)
+                                .tint(.red)
+                            
+                            // For all intermediate "ping" points, use a small circle
+                        } else {
+                            Annotation("", coordinate: coordinate, anchor: .center) {
+                                ZStack { // Used to layer the number on top of the circle
+                                    Circle()
+                                        .fill(Color.blue)
+                                    
+                                    Text("\(index)") // Displays the number
+                                        .font(.system(size: 12, weight: .bold))
+                                        .foregroundColor(.white)
+                                }
+                                .frame(width: 22, height: 22) // Made the frame larger
+                                .overlay(
+                                    Circle().stroke(Color.white, lineWidth: 2)
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -104,7 +129,7 @@ struct MapsView: View {
                     }
                 }
             }
-
+            
             // UI Overlay
             VStack {
                 Spacer()
@@ -114,18 +139,18 @@ struct MapsView: View {
                     historySheet
                         .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
-
+                
                 bottomControls
             }
         }
         .animation(.spring(response: 0.5, dampingFraction: 0.8), value: showHistory)
     }
-
+    
     // MARK: Subviews
     
     private var bottomControls: some View {
         HStack {
-            // Nicely styled history button
+            
             Button {
                 showHistory.toggle()
             } label: {
@@ -137,10 +162,10 @@ struct MapsView: View {
                     .clipShape(Circle())
                     .shadow(radius: 5)
             }
-
+            
             Spacer()
-
-            // Styled Start/Stop Tracking Button
+            
+      
             Button(action: locationManager.toggleTracking) {
                 Text(locationManager.isTracking ? "Stop Tracking" : "Start Tracking")
                     .font(.headline.bold())
@@ -167,7 +192,7 @@ struct MapsView: View {
                 }
             }
             .padding()
-
+            
             // Show a helpful message if history is empty
             if locationManager.tripHistory.isEmpty {
                 ContentUnavailableView("No Saved Trips", systemImage: "map.fill", description: Text("Press 'Start Tracking' to record your first trip."))
@@ -188,7 +213,7 @@ struct MapsView: View {
                 .listStyle(.sidebar)
                 .background(.thinMaterial)
                 
-               
+                
             }
         }
         .frame(height: 400)
@@ -202,7 +227,7 @@ struct MapsView: View {
 // A dedicated view for a single, styled row in the history list
 struct TripRowView: View {
     @Binding var trip: Trip
-
+    
     var body: some View {
         HStack(spacing: 15) {
             // The small map preview
@@ -213,7 +238,7 @@ struct TripRowView: View {
                     RoundedRectangle(cornerRadius: 8)
                         .stroke(Color.secondary.opacity(0.5), lineWidth: 1)
                 )
-
+            
             // Details of the trip: Date, Start, and End locations
             VStack(alignment: .leading, spacing: 5) {
                 Text(trip.date, style: .date)
@@ -261,7 +286,7 @@ struct TripPreviewMapView: View {
         
         return MKCoordinateRegion(center: center, span: span)
     }
-
+    
     var body: some View {
         Map(initialPosition: .region(region)) {
             MapPolyline(coordinates: trip.locations.map { $0.coordinate })
@@ -278,11 +303,11 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     let manager = CLLocationManager()
     private let historySaveKey = "MapTrackingHistory"
     private let geocoderService = GeocoderService()
-
+    
     @Published var isTracking = false
     @Published var trackedLocations: [CLLocationCoordinate2D] = []
     @Published var tripHistory: [Trip] = [] { didSet { saveHistory() } }
-
+    
     override init() {
         super.init()
         manager.delegate = self
@@ -291,7 +316,7 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         manager.distanceFilter = 30 // meters
         loadHistory()
     }
-
+    
     func toggleTracking() {
         if self.isTracking {
             manager.stopUpdatingLocation()
@@ -320,7 +345,7 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         trip.startLocationName = await geocoderService.placemark(for: first)
         trip.endLocationName = await geocoderService.placemark(for: last)
     }
-
+    
     func displayTrip(_ trip: Trip) {
         if isTracking { toggleTracking() }
         self.trackedLocations = trip.locations.map { $0.coordinate }
@@ -338,7 +363,7 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         let span = MKCoordinateSpan(latitudeDelta: (maxLat - minLat) * 1.5, longitudeDelta: (maxLon - minLon) * 1.5)
         return MKCoordinateRegion(center: center, span: span)
     }
-
+    
     func clearHistory() {
         tripHistory.removeAll()
         trackedLocations = []
@@ -361,7 +386,7 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         guard let latest = locations.last else { return }
         trackedLocations.append(latest.coordinate)
     }
-
+    
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
         print("Location Error: \(error.localizedDescription)")
     }
