@@ -72,7 +72,7 @@ class GeocoderService {
 // MARK: - Views
 
 struct MapsView: View {
-    @StateObject private var locationManager = LocationManager()
+    @EnvironmentObject private var locationManager: LocationManager
     @State private var showHistory = false
     @State private var cameraPosition: MapCameraPosition = .automatic
     
@@ -307,6 +307,7 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     @Published var isTracking = false
     @Published var trackedLocations: [CLLocationCoordinate2D] = []
     @Published var tripHistory: [Trip] = [] { didSet { saveHistory() } }
+    private var manualTrackingOverride = false
     
     override init() {
         super.init()
@@ -332,11 +333,21 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
                     }
                 }
             }
+            manualTrackingOverride = true
         } else {
             trackedLocations = []
             manager.startUpdatingLocation()
+            manualTrackingOverride = false
         }
         isTracking.toggle()
+    }
+    
+    func startLocationTracking() {
+        if !isTracking && !manualTrackingOverride {
+            trackedLocations = []
+            manager.startUpdatingLocation()
+            isTracking = true
+        }
     }
     
     // Fetches start and end placenames for a trip
@@ -409,4 +420,6 @@ extension MKCoordinateSpan {
 
 #Preview {
     MapsView()
+        .environmentObject(LocationManager())
 }
+

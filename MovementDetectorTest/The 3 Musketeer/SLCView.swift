@@ -114,8 +114,9 @@ struct LocationEntry: Identifiable, Codable {
 
 
 class SignificantLocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
-    private let locationManager = CLLocationManager()
-    
+    private let clManager = CLLocationManager()
+    var appLocationManager: LocationManager? // reference to app's tracker
+
    
     @Published private(set) var locationHistory: [LocationEntry] = [] {
         didSet {
@@ -131,13 +132,13 @@ class SignificantLocationManager: NSObject, ObservableObject, CLLocationManagerD
         super.init()
         loadHistory() // Load history on initialization
         authorizationStatusMessage = "Requesting authorization..."
-        locationManager.delegate = self // Set delegate
-        locationManager.requestAlwaysAuthorization()
+        clManager.delegate = self // Set delegate
+        clManager.requestAlwaysAuthorization()
     }
 
     func startMonitoring() {
         if CLLocationManager.significantLocationChangeMonitoringAvailable() {
-            locationManager.startMonitoringSignificantLocationChanges()
+            clManager.startMonitoringSignificantLocationChanges()
             print("SLC: Monitoring started.")
         } else {
             print("Significant location monitoring is not available on this device.")
@@ -157,8 +158,7 @@ class SignificantLocationManager: NSObject, ObservableObject, CLLocationManagerD
             print("Location history saved! (\(locationHistory.count) entries)")
         }
     }
-    
-   
+
     private func loadHistory() {
         if let savedData = UserDefaults.standard.data(forKey: historySaveKey) {
             if let decodedHistory = try? JSONDecoder().decode([LocationEntry].self, from: savedData) {
@@ -210,6 +210,7 @@ class SignificantLocationManager: NSObject, ObservableObject, CLLocationManagerD
             
             self.locationHistory.insert(LocationEntry(location: location), at: 0)
             print("Significant location change detected: \(location.coordinate)")
+            self.appLocationManager?.startLocationTracking() // trigger app tracking
         }
     }
 
@@ -218,3 +219,4 @@ class SignificantLocationManager: NSObject, ObservableObject, CLLocationManagerD
         print("Location manager error: \(error.localizedDescription)")
     }
 }
+

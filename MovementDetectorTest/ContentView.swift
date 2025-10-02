@@ -156,7 +156,40 @@ final class MovementHistoryViewModel: ObservableObject {
     }
 }
 
+//struct ContentView: View {
+//    @StateObject private var vm = MovementHistoryViewModel()
+//    @StateObject private var slm = SignificantLocationManager()
+//
+//    var body: some View {
+//        TabView {
+//            MovementView(vm: vm)
+//                .tabItem {
+//                    Label("Activity", systemImage: "figure.walk.circle.fill")
+//                }
+//
+//            SignificantLocationView(slm: slm)
+//                .tabItem {
+//                    Label("Locations", systemImage: "location.circle.fill")
+//                }
+//            
+//            MapsView()
+//                .tabItem {
+//                    Label("Map", systemImage: "map.fill")
+//                }
+//
+//        }
+//        .onAppear {
+//            vm.start()
+//            slm.startMonitoring()
+//        }
+//        .onDisappear { vm.stop() }
+//    }
+//}
+
+
+// added this for auto launching the app using SLC
 struct ContentView: View {
+    @EnvironmentObject var locationManager: LocationManager
     @StateObject private var vm = MovementHistoryViewModel()
     @StateObject private var slm = SignificantLocationManager()
 
@@ -181,6 +214,7 @@ struct ContentView: View {
         .onAppear {
             vm.start()
             slm.startMonitoring()
+            slm.appLocationManager = locationManager
         }
         .onDisappear { vm.stop() }
     }
@@ -308,5 +342,5 @@ struct MovementView: View {
 
 #Preview {
     ContentView()
+        .environmentObject(LocationManager())
 }
-
