@@ -9,7 +9,7 @@ import Foundation
 import UIKit
 import CoreMotion
 
-class ViewController: UIViewController {
+class CoreMotionTest: UIViewController {
 
     // 1. Create an instance of CMMotionActivityManager.
     // This object is the central point for accessing motion activity data.
