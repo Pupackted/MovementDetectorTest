@@ -9,6 +9,7 @@ import Foundation
 import CoreLocation
 import Combine
 import SwiftUI
+import MapKit // <-- 1. IMPORT MAPKIT
 
 
 struct SignificantLocationView: View {
@@ -62,26 +63,44 @@ struct SignificantLocationView: View {
         }
     }
     
+    // ▼▼▼▼▼ MODIFIED SECTION ▼▼▼▼▼
     private var historyListView: some View {
         ScrollView {
             LazyVStack(spacing: 10) {
-              
+                
                 ForEach(slm.locationHistory) { item in
-                    HStack(spacing: 12) {
-                        Image(systemName: "location.circle.fill")
-                            .font(.title2)
-                            .foregroundStyle(.cyan)
-                            .frame(width: 28, height: 28)
+                    // 2. Wrapped in a VStack to hold the map below the text
+                    VStack(alignment: .leading, spacing: 8) {
+                        // This is the original HStack with your location info
+                        HStack(spacing: 12) {
+                            Image(systemName: "location.circle.fill")
+                                .font(.title2)
+                                .foregroundStyle(.cyan)
+                                .frame(width: 28, height: 28)
 
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("\(String(format: "%.5f", item.latitude)), \(String(format: "%.5f", item.longitude))")
-                                .font(.subheadline.weight(.semibold))
-                                .foregroundStyle(.primary)
-                            Text(timeFormatter.string(from: item.date))
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("\(String(format: "%.5f", item.latitude)), \(String(format: "%.5f", item.longitude))")
+                                    .font(.subheadline.weight(.semibold))
+                                    .foregroundStyle(.primary)
+                                Text(timeFormatter.string(from: item.date))
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                            Spacer()
                         }
-                        Spacer()
+                        
+                        // 3. Added Map View for preview
+                        Map(coordinateRegion: .constant(
+                            MKCoordinateRegion(
+                                center: item.coordinate,
+                                span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
+                            )
+                        ), annotationItems: [item]) { place in
+                            MapMarker(coordinate: place.coordinate, tint: .cyan)
+                        }
+                        .frame(height: 150)
+                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                        .disabled(true) // Makes the map a non-interactive preview
                     }
                     .padding(12)
                     .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
@@ -90,6 +109,7 @@ struct SignificantLocationView: View {
             .padding(.vertical, 4)
         }
     }
+    // ▲▲▲▲▲ END MODIFIED SECTION ▲▲▲▲▲
 }
 
 

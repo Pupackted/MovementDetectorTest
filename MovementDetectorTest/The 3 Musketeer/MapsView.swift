@@ -241,8 +241,13 @@ struct TripRowView: View {
             
             // Details of the trip: Date, Start, and End locations
             VStack(alignment: .leading, spacing: 5) {
-                Text(trip.date, style: .date)
-                    .fontWeight(.semibold)
+                VStack(alignment: .leading){
+                    Text(trip.date, style: .time)
+                        .fontWeight(.semibold)
+                    Text(trip.date, style: .date)
+                        
+                }
+               
                 
                 HStack {
                     Image(systemName: "arrow.up.right.circle.fill")
@@ -314,7 +319,7 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         manager.delegate = self
         manager.requestWhenInUseAuthorization()
         manager.desiredAccuracy = kCLLocationAccuracyBest
-        manager.distanceFilter = 30 // meters
+        manager.distanceFilter = 20 // meters
         loadHistory()
     }
     
