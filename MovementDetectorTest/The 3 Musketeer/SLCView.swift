@@ -17,7 +17,7 @@ struct SignificantLocationView: View {
     private let timeFormatter: DateFormatter = {
         let df = DateFormatter()
         df.dateStyle = .none
-        df.timeStyle = .medium // Changed to medium for more detail
+        df.timeStyle = .medium
         return df
     }()
 
@@ -31,7 +31,7 @@ struct SignificantLocationView: View {
             VStack(spacing: 16) {
                 headerView
                 
-                // UPDATED: Swapped the logic to display history list
+               
                 if slm.locationHistory.isEmpty {
                     Text("No significant location changes yet.")
                         .foregroundStyle(.white.opacity(0.7))
@@ -65,7 +65,7 @@ struct SignificantLocationView: View {
     private var historyListView: some View {
         ScrollView {
             LazyVStack(spacing: 10) {
-                // UPDATED: Loop through the new locationHistory
+              
                 ForEach(slm.locationHistory) { item in
                     HStack(spacing: 12) {
                         Image(systemName: "location.circle.fill")
@@ -105,9 +105,7 @@ struct LocationEntry: Identifiable, Codable {
 
     init(id: UUID = UUID(), location: CLLocation) {
         self.id = id
-        // --- FIX IS HERE ---
-        // Use Date() to get the current time the event is processed,
-        // instead of location.timestamp.
+    
         self.date = Date()
         self.latitude = location.coordinate.latitude
         self.longitude = location.coordinate.longitude
@@ -118,7 +116,7 @@ struct LocationEntry: Identifiable, Codable {
 class SignificantLocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     private let locationManager = CLLocationManager()
     
-    // UPDATED: This now holds the persistent history of locations.
+   
     @Published private(set) var locationHistory: [LocationEntry] = [] {
         didSet {
             saveHistory()
@@ -147,12 +145,12 @@ class SignificantLocationManager: NSObject, ObservableObject, CLLocationManagerD
         }
     }
 
-    // NEW: Function to clear the location history.
+   
     func clearHistory() {
         locationHistory.removeAll()
     }
     
-    // NEW: Function to save the history array to UserDefaults.
+ 
     private func saveHistory() {
         if let encodedData = try? JSONEncoder().encode(locationHistory) {
             UserDefaults.standard.set(encodedData, forKey: historySaveKey)
@@ -160,7 +158,7 @@ class SignificantLocationManager: NSObject, ObservableObject, CLLocationManagerD
         }
     }
     
-    // NEW: Function to load the history from UserDefaults.
+   
     private func loadHistory() {
         if let savedData = UserDefaults.standard.data(forKey: historySaveKey) {
             if let decodedHistory = try? JSONDecoder().decode([LocationEntry].self, from: savedData) {
@@ -209,7 +207,7 @@ class SignificantLocationManager: NSObject, ObservableObject, CLLocationManagerD
         }
         
         DispatchQueue.main.async {
-            // UPDATED: Insert new location entry into the history.
+            
             self.locationHistory.insert(LocationEntry(location: location), at: 0)
             print("Significant location change detected: \(location.coordinate)")
         }
