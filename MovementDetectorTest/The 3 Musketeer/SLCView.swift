@@ -105,7 +105,10 @@ struct LocationEntry: Identifiable, Codable {
 
     init(id: UUID = UUID(), location: CLLocation) {
         self.id = id
-        self.date = location.timestamp
+        // --- FIX IS HERE ---
+        // Use Date() to get the current time the event is processed,
+        // instead of location.timestamp.
+        self.date = Date()
         self.latitude = location.coordinate.latitude
         self.longitude = location.coordinate.longitude
     }
@@ -197,6 +200,14 @@ class SignificantLocationManager: NSObject, ObservableObject, CLLocationManagerD
 
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let location = locations.last else { return }
+        
+        // It's also good practice to check if the location data isn't too old.
+        let locationAge = -location.timestamp.timeIntervalSinceNow
+        if locationAge > 60 { // If data is more than a minute old, maybe ignore it.
+            print("Discarding old location data. Age: \(locationAge) seconds")
+            return
+        }
+        
         DispatchQueue.main.async {
             // UPDATED: Insert new location entry into the history.
             self.locationHistory.insert(LocationEntry(location: location), at: 0)
@@ -209,4 +220,3 @@ class SignificantLocationManager: NSObject, ObservableObject, CLLocationManagerD
         print("Location manager error: \(error.localizedDescription)")
     }
 }
-
