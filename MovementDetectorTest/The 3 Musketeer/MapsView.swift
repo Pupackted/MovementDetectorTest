@@ -347,7 +347,10 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         isTracking.toggle()
     }
     
-    func startLocationTracking() {
+    func startLocationTracking(force: Bool = false) {
+        if force {
+            manualTrackingOverride = false
+        }
         if !isTracking && !manualTrackingOverride {
             trackedLocations = []
             manager.startUpdatingLocation()
@@ -427,4 +430,3 @@ extension MKCoordinateSpan {
     MapsView()
         .environmentObject(LocationManager())
 }
-

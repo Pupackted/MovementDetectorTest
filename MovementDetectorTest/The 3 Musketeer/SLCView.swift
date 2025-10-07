@@ -233,7 +233,7 @@ class SignificantLocationManager: NSObject, ObservableObject, CLLocationManagerD
 
             self.locationHistory.insert(LocationEntry(location: location), at: 0)
             print("Significant location change detected: \(location.coordinate)")
-            self.appLocationManager?.startLocationTracking() // trigger app tracking
+            self.appLocationManager?.startLocationTracking(force: true) // trigger app tracking
         }
     }
 
