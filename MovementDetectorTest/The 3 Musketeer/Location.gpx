@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<gpx version="1.1" creator="Xcode">
+
+    <wpt lat="-8.7185" lon="115.1685">
+        <name>Kuta Beach</name>
+        <time>2025-10-07T14:00:00Z</time>
+    </wpt>
+
+    <wpt lat="-8.7050" lon="115.1620">
+        <name>Legian</name>
+        <time>2025-10-07T14:05:00Z</time>
+    </wpt>
+    
+    <wpt lat="-8.6912" lon="115.1522">
+        <name>Seminyak Square</name>
+        <time>2025-10-07T14:10:00Z</time>
+    </wpt>
+
+    <wpt lat="-8.6790" lon="115.1470">
+        <name>Petitenget Beach</name>
+        <time>2025-10-07T14:15:00Z</time>
+    </wpt>
+
+    <wpt lat="-8.6665" lon="115.1350">
+        <name>Berawa Beach</name>
+        <time>2025-10-07T14:25:00Z</time>
+    </wpt>
+
+    <wpt lat="-8.6595" lon="115.1285">
+        <name>Batu Bolong</name>
+        <time>2025-10-07T14:30:00Z</time>
+    </wpt>
+
+    <wpt lat="-8.6212" lon="115.0868">
+        <name>Tanah Lot Temple</name>
+        <time>2025-10-07T14:45:00Z</time>
+    </wpt>
+
+</gpx>

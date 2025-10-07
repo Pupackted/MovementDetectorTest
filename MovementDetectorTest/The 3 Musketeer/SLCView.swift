@@ -1,10 +1,13 @@
-//
+// pupackted/movementdetectortest/MovementDetectorTest-793a06c9f3245d510fa6ee04280a0557067f043c/MovementDetectorTest/The 3 Musketeer/SLCView.swift
 import Foundation
 import CoreLocation
 import Combine
 import SwiftUI
-import MapKit // <-- 1. IMPORT MAPKIT
+import MapKit
+import UserNotifications // 1. Import the UserNotifications framework
 
+// The `SignificantLocationView` and `LocationEntry` structs remain unchanged.
+// ... (code for structs is the same) ...
 struct SignificantLocationView: View {
     @ObservedObject var slm: SignificantLocationManager
 
@@ -139,6 +142,7 @@ struct LocationEntry: Identifiable, Codable {
     }
 }
 
+
 class SignificantLocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     private let clManager = CLLocationManager()
     var appLocationManager: LocationManager? // reference to app's tracker
@@ -159,8 +163,51 @@ class SignificantLocationManager: NSObject, ObservableObject, CLLocationManagerD
         authorizationStatusMessage = "Requesting authorization..."
         clManager.delegate = self // Set delegate
         clManager.requestAlwaysAuthorization()
+
+        // 2. Request notification permission when the manager is initialized
+        requestNotificationAuthorization()
+    }
+    
+    // MARK: - New Notification Functions
+
+    private func requestNotificationAuthorization() {
+        let center = UNUserNotificationCenter.current()
+        center.requestAuthorization(options: [.alert, .sound, .badge]) { granted, error in
+            if let error = error {
+                print("Error requesting notification authorization: \(error.localizedDescription)")
+            }
+            if granted {
+                print("Notification permission granted.")
+            } else {
+                print("Notification permission denied.")
+            }
+        }
     }
 
+    private func sendSLCNotification(location: CLLocation) {
+        let content = UNMutableNotificationContent()
+        content.title = "Significant Location Change"
+        content.body = String(format: "New location detected: %.4f, %.4f", location.coordinate.latitude, location.coordinate.longitude)
+        content.sound = .default
+
+        // Trigger the notification to show in 1 second
+        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
+
+        // Create the request with a unique identifier
+        let request = UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: trigger)
+
+        // Add the request to the notification center
+        UNUserNotificationCenter.current().add(request) { error in
+            if let error = error {
+                print("Error adding notification request: \(error.localizedDescription)")
+            } else {
+                print("Notification scheduled successfully.")
+            }
+        }
+    }
+
+    // MARK: - Existing Functions
+    
     func startMonitoring() {
         if CLLocationManager.significantLocationChangeMonitoringAvailable() {
             clManager.startMonitoringSignificantLocationChanges()
@@ -222,15 +269,16 @@ class SignificantLocationManager: NSObject, ObservableObject, CLLocationManagerD
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let location = locations.last else { return }
 
-        // It's also good practice to check if the location data isn't too old.
         let locationAge = -location.timestamp.timeIntervalSinceNow
-        if locationAge > 60 { // If data is more than a minute old, maybe ignore it.
+        if locationAge > 60 {
             print("Discarding old location data. Age: \(locationAge) seconds")
             return
         }
+        
+        // 3. Send a notification when an SLC event occurs
+        sendSLCNotification(location: location)
 
         DispatchQueue.main.async {
-
             self.locationHistory.insert(LocationEntry(location: location), at: 0)
             print("Significant location change detected: \(location.coordinate)")
             self.appLocationManager?.startLocationTracking(force: true) // trigger app tracking
