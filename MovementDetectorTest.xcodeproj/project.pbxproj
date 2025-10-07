@@ -58,6 +58,11 @@
 			path = MovementDetectorTestUITests;
 			sourceTree = "<group>";
 		};
+		7CFB47012E9493B3007CF2F3 /* RunsInBackrgound */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = RunsInBackrgound;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -92,6 +97,7 @@
 				7CA1887A2E8B6CDF005E6ABF /* MovementDetectorTestTests */,
 				7CA188842E8B6CDF005E6ABF /* MovementDetectorTestUITests */,
 				7CA1886B2E8B6CDE005E6ABF /* Products */,
+				7CFB47012E9493B3007CF2F3 /* RunsInBackrgound */,
 			);
 			sourceTree = "<group>";
 		};
@@ -122,6 +128,7 @@
 			);
 			fileSystemSynchronizedGroups = (
 				7CA1886C2E8B6CDE005E6ABF /* MovementDetectorTest */,
+				7CFB47012E9493B3007CF2F3 /* RunsInBackrgound */,
 			);
 			name = MovementDetectorTest;
 			packageProductDependencies = (

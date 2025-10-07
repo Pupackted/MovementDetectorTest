@@ -10,6 +10,7 @@ import SwiftUI
 @main
 struct MovementDetectorTestApp: App {
     @StateObject private var locationManager = LocationManager()  // added this for auto launching the app using SLC
+    @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
    
 
     var body: some Scene {
